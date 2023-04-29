@@ -6,6 +6,10 @@ part 'user_state.dart';
 
 class UserBloc extends Bloc<UserEvent, UserState> {
   UserBloc() : super(UserInitial()) {
-    on<UserGetUsersEvent>((event, emit) {});
+    on<UserGetUsersEvent>(_onGetUser);
+  }
+
+  _onGetUser(UserGetUsersEvent event, Emitter<UserState> state) async {
+    await Future.delayed(const Duration(seconds: 1));
   }
 }
