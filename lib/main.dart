@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'counter_bloc.dart';
+import 'package:counter_bloc/bloc/user_bloc.dart';
 
 void main() {
   runApp(const MyCounterBloc());
@@ -23,8 +24,15 @@ class FirstPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     CounterBloc bloc = CounterBloc();
-    return BlocProvider(
-      create: (context) => bloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<CounterBloc>(
+          create: (context) => bloc,
+        ),
+        BlocProvider<UserBloc>(
+          create: (context) => UserBloc(),
+        ),
+      ],
       child: Scaffold(
         floatingActionButton:
             Column(mainAxisAlignment: MainAxisAlignment.center, children: [
