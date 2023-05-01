@@ -33,31 +33,35 @@ class FirstPage extends StatelessWidget {
         ),
       ],
       child: Builder(builder: (context) {
+        CounterBloc counterBloc = BlocProvider.of<CounterBloc>(context);
         return Scaffold(
           floatingActionButton:
               Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             IconButton(
               onPressed: () {
-                CounterBloc counterBloc = BlocProvider.of<CounterBloc>(context);
                 counterBloc.add(CounterIncrementEvent());
               },
               icon: const Icon(Icons.plus_one),
             ),
             IconButton(
               onPressed: () {
-                //counterBloc.add(CounterDecrementEvent());
+                counterBloc.add(CounterDecrementEvent());
               },
               icon: const Icon(Icons.exposure_minus_1),
             ),
             IconButton(
               onPressed: () {
-                //userBloc.add(UserGetUsersEvent(counterBloc.state));
+                UserBloc userBloc = context.read<UserBloc>();
+                userBloc
+                    .add(UserGetUsersEvent(context.read<CounterBloc>().state));
               },
               icon: const Icon(Icons.person),
             ),
             IconButton(
               onPressed: () {
-                //userBloc.add(UserGetUsersJobEvent(counterBloc.state));
+                UserBloc userBloc = context.read<UserBloc>();
+                userBloc.add(
+                    UserGetUsersJobEvent(context.read<CounterBloc>().state));
               },
               icon: const Icon(Icons.work),
             ),
@@ -69,9 +73,17 @@ class FirstPage extends StatelessWidget {
                   BlocBuilder<CounterBloc, int>(
                     //bloc: counterBloc,
                     builder: (context, state) {
-                      return Text(
-                        state.toString(),
-                        style: const TextStyle(fontSize: 55),
+                      final users =
+                          context.select((UserBloc bloc) => bloc.state.users);
+                      return Column(
+                        children: [
+                          Text(
+                            state.toString(),
+                            style: const TextStyle(fontSize: 55),
+                          ),
+                          if (users.isNotEmpty)
+                            ...users.map((e) => Text(e.name)),
+                        ],
                       );
                     },
                   ),
@@ -84,8 +96,8 @@ class FirstPage extends StatelessWidget {
                         children: [
                           if (state.isLoading)
                             const CircularProgressIndicator(),
-                          if (users.isNotEmpty)
-                            ...users.map((e) => Text(e.name)),
+                          //if (users.isNotEmpty)
+                          //...users.map((e) => Text(e.name)),
                           if (job.isNotEmpty) ...job.map((e) => Text(e.name)),
                         ],
                       );
