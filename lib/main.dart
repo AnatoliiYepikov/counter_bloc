@@ -12,8 +12,20 @@ class MyCounterBloc extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: FirstPage(),
+    CounterBloc counterBloc = CounterBloc();
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => CounterBloc(),
+          lazy: false,
+        ),
+        BlocProvider(
+          create: (context) => UserBloc(counterBloc),
+        ),
+      ],
+      child: const MaterialApp(
+        home: FirstPage(),
+      ),
     );
   }
 }
@@ -23,93 +35,88 @@ class FirstPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final counterBloc = CounterBloc();
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<CounterBloc>(
-          create: (context) => counterBloc,
+    CounterBloc counterBloc = BlocProvider.of<CounterBloc>(context);
+    return Scaffold(
+      floatingActionButton:
+          Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        IconButton(
+          onPressed: () {
+            counterBloc.add(CounterIncrementEvent());
+          },
+          icon: const Icon(Icons.plus_one),
         ),
-        BlocProvider<UserBloc>(
-          create: (context) => UserBloc(counterBloc),
+        IconButton(
+          onPressed: () {
+            counterBloc.add(CounterDecrementEvent());
+          },
+          icon: const Icon(Icons.exposure_minus_1),
         ),
-      ],
-      child: Builder(builder: (context) {
-        CounterBloc counterBloc = BlocProvider.of<CounterBloc>(context);
-        return Scaffold(
-          floatingActionButton:
-              Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            IconButton(
-              onPressed: () {
-                counterBloc.add(CounterIncrementEvent());
-              },
-              icon: const Icon(Icons.plus_one),
-            ),
-            IconButton(
-              onPressed: () {
-                counterBloc.add(CounterDecrementEvent());
-              },
-              icon: const Icon(Icons.exposure_minus_1),
-            ),
-            IconButton(
-              onPressed: () {
-                UserBloc userBloc = context.read<UserBloc>();
-                userBloc
-                    .add(UserGetUsersEvent(context.read<CounterBloc>().state));
-              },
-              icon: const Icon(Icons.person),
-            ),
-            IconButton(
-              onPressed: () {
-                UserBloc userBloc = context.read<UserBloc>();
-                userBloc.add(
-                    UserGetUsersJobEvent(context.read<CounterBloc>().state));
-              },
-              icon: const Icon(Icons.work),
-            ),
-          ]),
-          body: SafeArea(
-            child: Center(
-              child: Column(
-                children: [
-                  BlocBuilder<CounterBloc, int>(
-                    //bloc: counterBloc,
-                    builder: (context, state) {
-                      final users =
-                          context.select((UserBloc bloc) => bloc.state.users);
-                      return Column(
-                        children: [
-                          Text(
-                            state.toString(),
-                            style: const TextStyle(fontSize: 55),
-                          ),
-                          if (users.isNotEmpty)
-                            ...users.map((e) => Text(e.name)),
-                        ],
-                      );
-                    },
-                  ),
-                  BlocBuilder<UserBloc, UserState>(
-                    //bloc: userBloc,
-                    builder: (context, state) {
-                      final users = state.users;
-                      final job = state.job;
-                      return Column(
-                        children: [
-                          if (state.isLoading)
-                            const CircularProgressIndicator(),
-                          //if (users.isNotEmpty)
-                          //...users.map((e) => Text(e.name)),
-                          if (job.isNotEmpty) ...job.map((e) => Text(e.name)),
-                        ],
-                      );
-                    },
-                  ),
-                ],
+        IconButton(
+          onPressed: () {
+            UserBloc userBloc = context.read<UserBloc>();
+            userBloc.add(UserGetUsersEvent(context.read<CounterBloc>().state));
+          },
+          icon: const Icon(Icons.person),
+        ),
+        IconButton(
+          onPressed: () {
+            UserBloc userBloc = context.read<UserBloc>();
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => Job()),
+            );
+            userBloc
+                .add(UserGetUsersJobEvent(context.read<CounterBloc>().state));
+          },
+          icon: const Icon(Icons.work),
+        ),
+      ]),
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            children: [
+              BlocBuilder<CounterBloc, int>(
+                //bloc: counterBloc,
+                builder: (context, state) {
+                  final users =
+                      context.select((UserBloc bloc) => bloc.state.users);
+                  return Column(
+                    children: [
+                      Text(
+                        state.toString(),
+                        style: const TextStyle(fontSize: 55),
+                      ),
+                      if (users.isNotEmpty) ...users.map((e) => Text(e.name)),
+                    ],
+                  );
+                },
               ),
-            ),
+            ],
           ),
-        );
-      }),
+        ),
+      ),
+    );
+  }
+}
+
+class Job extends StatelessWidget {
+  const Job({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: BlocBuilder<UserBloc, UserState>(
+        builder: (context, state) {
+          final job = state.job;
+          return Column(
+            children: [
+              if (state.isLoading) const CircularProgressIndicator(),
+              if (job.isNotEmpty) ...job.map((e) => Text(e.name)),
+            ],
+          );
+        },
+      ),
     );
   }
 }
